@@ -1,3 +1,7 @@
+interface SSNode extends Node {
+  ssIgnoreChild?: boolean;
+  ssIsEndNode?: boolean;
+}
 /**
  *
  * travel from one TEXT_NODE to another
@@ -6,7 +10,7 @@ const text2text = (
   startNode: Text,
   endNode: Text,
   commonAncestor: Node,
-  onTransition: (node: Node) => void
+  onTransition: (node: Node) => Node | void
 ) => {
   transition(startNode, endNode, commonAncestor, onTransition);
 };
@@ -43,19 +47,35 @@ const firstAncestorNotNullSibling = (node: Node): Node | null => {
  * walks DOM including from currentNode to endNode
  * children of currentNode will be included
  * children of endNode will be excluded
+ *
+ * if onTransition mutates the tree, then it must return new currentNode
  */
 const transition = (
-  currentNode: Node,
-  endNode: Node,
-  commonAncestor: Node,
-  onTransition: (node: Node) => void
+  currentNode: SSNode,
+  endNode: SSNode,
+  commonAncestor: SSNode,
+  onTransition: (node: SSNode) => SSNode | void
 ) => {
-  onTransition(currentNode);
-  if (currentNode == endNode) {
+  // clean the attach field
+  delete currentNode.ssIgnoreChild;
+
+  let newNode = onTransition(currentNode);
+  if (newNode) {
+    newNode.ssIgnoreChild = true;
+    if (currentNode == endNode) {
+      newNode.ssIsEndNode = true;
+    }
+    currentNode = newNode;
+  }
+  if (currentNode == endNode || currentNode.ssIsEndNode) {
+    // clean the attach field
+    delete currentNode.ssIsEndNode;
+    delete currentNode.ssIgnoreChild;
+
     return;
   }
   let nextNode: Node | null;
-  if (currentNode.childNodes.length == 0) {
+  if (currentNode.childNodes.length == 0 || currentNode.ssIgnoreChild) {
     nextNode = nextSibling(currentNode);
     if (nextNode) {
       transition(nextNode, endNode, commonAncestor, onTransition);
@@ -63,6 +83,9 @@ const transition = (
     }
     nextNode = firstAncestorNotNullSibling(currentNode);
     if (nextNode == commonAncestor) {
+      // clean the attach field
+      delete currentNode.ssIgnoreChild;
+
       throw new Error("commonAncestor is nextNode");
     }
     if (nextNode) {
