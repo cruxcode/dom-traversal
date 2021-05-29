@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>traverse library</title>
+  </head>
+  <body>
+    <div id="tests">
+      <div id="test1">
+        <p>para 1</p>
+        <p>para 2 <b>with some bold text</b></p>
+        <p>
+          para 3
+          <span
+            >with some depth<b> with some bold and <i>italic text</i></b></span
+          >
+        </p>
+        <p>
+          <span
+            >para 4 with <code>code section</code> and
+            <code>some more code</code> and <b>bold text</b> ends here.</span
+          >
+        </p>
+      </div>
+      <div id="test2"></div>
+    </div>
+    <script src="./dist/text2text.js"></script>
+    <script>
+      const test1 = document.getElementById("test1");
+    </script>
+  </body>
+</html>
