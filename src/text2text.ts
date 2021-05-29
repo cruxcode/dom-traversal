@@ -12,7 +12,7 @@ const text2text = (
   commonAncestor: Node,
   onTransition: (node: Node) => Node | void
 ) => {
-  transition(startNode, endNode, commonAncestor, onTransition);
+  transition(startNode, endNode, commonAncestor, onTransition, null);
 };
 
 /**
@@ -48,18 +48,26 @@ const firstAncestorNotNullSibling = (node: Node): Node | null => {
  * children of currentNode will be included
  * children of endNode will be excluded
  *
+ */
+const NEXT_SIBLING = 1;
+const FIRST_CHILD = 2;
+const LAST_CHILD = 3;
+/**
+ *
  * if onTransition mutates the tree, then it must return new currentNode
  */
+
 const transition = (
   currentNode: SSNode,
   endNode: SSNode,
   commonAncestor: SSNode,
-  onTransition: (node: SSNode) => SSNode | void
+  onTransition: (node: SSNode, prevNode: Node | null) => SSNode | void,
+  prevNode: SSNode | null
 ) => {
   // clean the attach field
   delete currentNode.ssIgnoreChild;
 
-  let newNode = onTransition(currentNode);
+  let newNode = onTransition(currentNode, prevNode);
   if (newNode) {
     newNode.ssIgnoreChild = true;
     if (currentNode == endNode) {
@@ -78,7 +86,7 @@ const transition = (
   if (currentNode.childNodes.length == 0 || currentNode.ssIgnoreChild) {
     nextNode = nextSibling(currentNode);
     if (nextNode) {
-      transition(nextNode, endNode, commonAncestor, onTransition);
+      transition(nextNode, endNode, commonAncestor, onTransition, currentNode);
       return;
     }
     nextNode = firstAncestorNotNullSibling(currentNode);
@@ -89,13 +97,13 @@ const transition = (
       throw new Error("commonAncestor is nextNode");
     }
     if (nextNode) {
-      transition(nextNode, endNode, commonAncestor, onTransition);
+      transition(nextNode, endNode, commonAncestor, onTransition, currentNode);
       return;
     }
   } else {
     nextNode = firstChildNode(currentNode);
     if (nextNode) {
-      transition(nextNode, endNode, commonAncestor, onTransition);
+      transition(nextNode, endNode, commonAncestor, onTransition, currentNode);
       return;
     } else {
       throw new Error(
